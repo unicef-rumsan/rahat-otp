@@ -84,16 +84,16 @@ module.exports = {
       }
     });
 
-    contract.on('ClaimedERC1155', async (vendor, phone, tokenId, amount) => {
-      try {
-        const otp = await this.getOtp(phone);
-        if (!otp) return;
-        await this.setHashToChain_ERC1155(contract, vendor, phone.toString(), otp, tokenId);
-        this.sendMessage(phone, otp, amount);
-      } catch (e) {
-        console.log(e);
-      }
-    });
+    // contract.on('ClaimedERC1155', async (vendor, phone, tokenId, amount) => {
+    //   try {
+    //     const otp = await this.getOtp(phone);
+    //     if (!otp) return;
+    //     await this.setHashToChain_ERC1155(contract, vendor, phone.toString(), otp, tokenId);
+    //     this.sendMessage(phone, otp, amount);
+    //   } catch (e) {
+    //     console.log(e);
+    //   }
+    // });
 
     provider.on('pending', async txHash => {
       const tx = await provider.getTransaction(txHash);
