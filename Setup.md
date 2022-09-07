@@ -41,11 +41,11 @@ SMS Services: goip | prabhu | rumsan | sparrow | twilio
 ```js
 {
   "disableEmail": false,
-  "from": "Rahat OTP Service<team@rahat.io>",
+  "from": "Rahat OTP Service<team@r*h*t.io>",
   "defaultSubject": "Hello from OTP Server",
   "transporter": {
     "pool": true,
-    "host": "email-smtp.us-east-1.amazonaws.com",
+    "host": "[aws-host]",
     "port": 587,
     "secure": false,
     "auth": {
