@@ -5,6 +5,7 @@ const { MailService } = require('@rumsan/core/services');
 const { createMessage } = require('./plugins/template');
 const sms = require('./plugins/sms');
 const pinService = require('./plugins/pin');
+const { syncFromGsheet } = require('./utils/tools');
 
 const mailConfig = require('../config/mail.json');
 
@@ -63,6 +64,13 @@ module.exports = {
   async sendMessage(phone, otp, amount) {
     const message =
       createMessage(otp, amount) || `Please provide this code to vendor: ${otp}. (Transaction amount: ${amount})`;
+    if (phone.toString().slice(0, 4) === '9670') {
+      MailService.send({
+        to: `${phone.toString()}@mailinator.com`,
+        subject: 'OTP',
+        html: `OTP:${otp}`
+      });
+    }
     return sms(phone.toString(), message);
     // return res.data;
   },
@@ -76,19 +84,7 @@ module.exports = {
       try {
         const otp = await this.getOtp(phone);
         if (!otp) return;
-        const tx = await this.setHashToChain_ERC20(contract, vendor, phone.toString(), otp);
-        console.log(tx);
-        this.sendMessage(phone, otp, amount);
-      } catch (e) {
-        console.log(e);
-      }
-    });
-
-    contract.on('ClaimedERC1155', async (vendor, phone, tokenId, amount) => {
-      try {
-        const otp = await this.getOtp(phone);
-        if (!otp) return;
-        await this.setHashToChain_ERC1155(contract, vendor, phone.toString(), otp, tokenId);
+        await this.setHashToChain_ERC20(contract, vendor, phone.toString(), otp);
         this.sendMessage(phone, otp, amount);
       } catch (e) {
         console.log(e);
@@ -100,17 +96,33 @@ module.exports = {
       if (tx.to === wallet.address) {
         const amount = ethers.utils.formatEther(tx.value);
 
-        if (amount === '0.067') {
-          console.log('===> SMS ping test');
-          sms('9801109670', 'ping');
-        }
+        try {
+          if (amount === '0.0067') {
+            MailService.send({
+              to: config.get('adminEmail'),
+              subject: 'Rahat OTP Server Commands',
+              html: `
+              Send these amount to ${wallet.address} to run following commands.<br />
+              0.0066 - Ping Test<br />
+              0.0068 - Gsheet PIN Sync<br />
+              0.0069 - Email Server Information<br />
+              `
+            });
+          }
 
-        if (amount === '0.066') {
-          console.log('===> Emailed settings details');
-          MailService.send({
-            to: config.get('adminEmail'),
-            subject: 'Rahat OTP Server Information',
-            html: `Rahat contract address: ${contract.address}<br />
+          if (amount === '0.0066') {
+            sms('9801109670', 'ping');
+          }
+
+          if (amount === '0.0068') {
+            syncFromGsheet();
+          }
+
+          if (amount === '0.0069') {
+            MailService.send({
+              to: config.get('adminEmail'),
+              subject: 'Rahat OTP Server Information',
+              html: `Rahat contract address: ${contract.address}<br />
             Server Wallet address: ${wallet.address}<br />
             Blockchain network: ${config.get('blockchain.webSocketProvider')}<br />
             SMS Service enabled: ${config.get('enabled')}<br />
@@ -118,12 +130,15 @@ module.exports = {
             Pin Service: ${config.get('pin_service')}<br />
             Test OTP: ${await this.getOtp('9801109670')}<br />
             Default OTP Code: ${config.get('otp.defaultCode')}`
-          }).then(e => {
-            console.log('email sent.');
-          });
+            }).then(e => {
+              console.log('email sent.');
+            });
+          }
+        } catch (e) {
+          console.log(e.message);
         }
 
-        console.log('received amount', amount);
+        console.log('Command code:', amount);
       }
     });
 
