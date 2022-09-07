@@ -2,7 +2,7 @@
 
 ### config/local.json
 
-Pin Services: random | fixed | ghseet | json | randomOrBackup
+Pin Services: random | fixed | ghseet | sqlite | randomOrBackup
 SMS Services: goip | prabhu | rumsan | sparrow | twilio
 
 ```js
@@ -18,7 +18,7 @@ SMS Services: goip | prabhu | rumsan | sparrow | twilio
   },
   "enabled": false,
   "sms_service": "prabhu",
-  "pin_service": "random",
+  "pin_service": "sqlite",
   "services": {
     "prabhu": {
       "url": "https://smsml.creationsoftnepal.com/SendBulkV1",
@@ -41,16 +41,16 @@ SMS Services: goip | prabhu | rumsan | sparrow | twilio
 ```js
 {
   "disableEmail": false,
-  "from": "Rahat OTP Service<---@---.com>",
-  "defaultSubject": "Default Subject",
+  "from": "Rahat OTP Service<team@rahat.io>",
+  "defaultSubject": "Hello from OTP Server",
   "transporter": {
-    "host": "smtp.gmail.com",
+    "pool": true,
+    "host": "email-smtp.us-east-1.amazonaws.com",
     "port": 587,
     "secure": false,
-    "pool": true,
     "auth": {
-      "user": "---@---.com",
-      "pass": "---"
+      "user": "[FROM AWS]",
+      "pass": "[FROM AWS]"
     }
   }
 }
@@ -61,21 +61,6 @@ SMS Services: goip | prabhu | rumsan | sparrow | twilio
 ### Google Sheet (gsheet) Template
 
 phone | pin | last_used | last_vendor
-
-### config/pins.json Template
-
-```json
-[
-  {
-    "phone": "9801101234",
-    "pin": "9854"
-  },
-  {
-    "phone": "9801104567",
-    "pin": "4515"
-  }
-]
-```
 
 # Setup
 
@@ -92,6 +77,20 @@ const model = db.define(
     otp: { type: Sequelize.STRING },
     vendor: { type: Sequelize.STRING },
     expireOn: { type: Sequelize.NUMBER }
+  },
+  {
+    freezeTableName: true,
+    timestamps: false
+  }
+);
+
+const pins = db.define(
+  'pins',
+  {
+    phone: { type: Sequelize.STRING },
+    pin: { type: Sequelize.STRING },
+    last_used: { type: Sequelize.STRING },
+    last_vendor: { type: Sequelize.STRING }
   },
   {
     freezeTableName: true,
