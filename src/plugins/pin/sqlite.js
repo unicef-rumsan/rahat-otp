@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-const { db } = require('../../utils');
+const { db, getUnixTimestamp } = require('../../utils');
 
 const model = db.define(
   'pins',
@@ -17,7 +17,7 @@ const model = db.define(
 
 module.exports = async (phone, vendor) => {
   const rec = await model.findOne({ where: { phone } });
-  rec.last_used = new Date();
+  rec.last_used = getUnixTimestamp();
   rec.last_vendor = vendor;
   rec.save();
   return rec.pin;

@@ -1,17 +1,30 @@
 /* eslint-disable import/no-dynamic-require */
 const config = require('config');
+const moment = require('moment');
 const Sequelize = require('sequelize');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const { MailService } = require('@rumsan/core/services');
-const db = require('./db');
+const { db, getUnixTimestamp } = require('./index');
 
 const credsPath = '../../config/google.json';
 
-const model = db.define(
+const Pin = db.define(
   'pins',
   {
     phone: { type: Sequelize.STRING },
     pin: { type: Sequelize.STRING }
+  },
+  {
+    freezeTableName: true,
+    timestamps: false
+  }
+);
+
+const Settings = db.define(
+  'settings',
+  {
+    key: { type: Sequelize.STRING },
+    value: { type: Sequelize.STRING }
   },
   {
     freezeTableName: true,
@@ -33,14 +46,32 @@ module.exports = {
       phone: d.phone,
       pin: d.pin
     }));
-    await model.destroy({ where: {} });
-    await model.bulkCreate(data);
-    const res = await model.count();
+    await Pin.destroy({ where: {} });
+    await Pin.bulkCreate(data);
+    const res = await Pin.count();
     MailService.send({
       to: config.get('adminEmail'),
       subject: 'GSheet PIN synced',
       html: `${res} beneficiaries pins synced.`
     });
     return res;
+  },
+
+  async getSqlitePinsCount() {
+    return Pin.count();
+  },
+
+  async updateServerStartDate() {
+    Settings.update({ value: getUnixTimestamp() }, { where: { key: 'statedOn' } });
+  },
+
+  async getLastStartDate() {
+    const data = await Settings.findOne({ where: { key: 'statedOn' } });
+    const startOn = new Date(parseInt(data.value) * 1000);
+    return {
+      duration: moment(startOn).fromNow(),
+      timestamp: data.value,
+      date: startOn
+    };
   }
 };

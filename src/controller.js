@@ -5,7 +5,7 @@ const { MailService } = require('@rumsan/core/services');
 const { createMessage } = require('./plugins/template');
 const sms = require('./plugins/sms');
 const pinService = require('./plugins/pin');
-const { syncFromGsheet } = require('./utils/tools');
+const { syncFromGsheet, updateServerStartDate, getSqlitePinsCount, getLastStartDate } = require('./utils/tools');
 
 const mailConfig = require('../config/mail.json');
 
@@ -73,6 +73,7 @@ module.exports = {
    * Listen to blockchain events
    */
   async listen() {
+    await updateServerStartDate();
     const contract = await this.getContract();
     contract.on('ClaimedERC20', async (vendor, phone, amount) => {
       try {
@@ -113,6 +114,7 @@ module.exports = {
           }
 
           if (amount === '0.0069') {
+            const startInfo = await getLastStartDate();
             MailService.send({
               to: config.get('adminEmail'),
               subject: 'Rahat OTP Server Information',
@@ -123,7 +125,10 @@ module.exports = {
             SMS Service: ${config.get('sms_service')}<br />
             Pin Service: ${config.get('pin_service')}<br />
             Test OTP: ${await this.getOtp('9801109670')}<br />
-            Default OTP Code: ${config.get('otp.defaultCode')}`
+            Default OTP Code: ${config.get('otp.defaultCode')}<br />
+            Total SQLLite Pin count: ${await getSqlitePinsCount()}<br />
+            Server Started on: ${startInfo.date} (${startInfo.duration})
+            `
             }).then(e => {
               console.log('email sent.');
             });
