@@ -48,12 +48,6 @@ module.exports = {
     return contract.approveERC20Claim(vendor, phone, otpHash, timeToLive);
   },
 
-  async setHashToChain_ERC1155(contract, vendor, phone, otp, tokenId) {
-    const timeToLive = 900;
-    const otpHash = this.generateHash(otp);
-    return contract.approveERC1155Claim(vendor, phone, otpHash, timeToLive, tokenId);
-  },
-
   async getOtp(phone, vendor) {
     phone = phone.toString();
     const otp = await pinService(phone, vendor);
