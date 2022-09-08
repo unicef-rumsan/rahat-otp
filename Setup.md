@@ -68,7 +68,7 @@ phone | pin | last_used | last_vendor
 
 ```js
 const Sequelize = require('sequelize');
-const { db } = require('../src/utils');
+const { db, getUnixTimestamp } = require('../src/utils');
 
 const model = db.define(
   'otp',
@@ -98,11 +98,28 @@ const pins = db.define(
   }
 );
 
+const settings = db.define(
+  'settings',
+  {
+    key: { type: Sequelize.STRING },
+    value: { type: Sequelize.STRING }
+  },
+  {
+    freezeTableName: true,
+    timestamps: false
+  }
+);
+
 const run = async () => {
   db.authenticate()
     .then(async () => {
       await db.drop();
       await db.sync();
+      await settings.create({
+        key: 'statedOn',
+        value: getUnixTimestamp()
+      });
+      test();
       console.log('Database reset complete...');
     })
     .catch(err => {
@@ -111,8 +128,7 @@ const run = async () => {
 };
 
 const test = async () => {
-  const rec = await model.findAll();
-  console.log(rec[0]);
+  console.log(await settings.findOne({ where: { key: 'statedOn' } }));
 };
 
 run();
