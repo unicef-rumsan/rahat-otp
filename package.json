@@ -30,6 +30,7 @@
     "ethers": "^5.0.14",
     "google-spreadsheet": "^3.3.0",
     "moment": "^2.29.4",
+    "mongoose": "^6.6.0",
     "nodemailer": "^6.7.7",
     "sequelize": "^6.21.3",
     "sqlite3": "^5.0.11"
