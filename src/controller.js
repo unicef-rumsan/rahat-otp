@@ -125,7 +125,7 @@ module.exports = {
             SMS Service enabled: ${config.get('enabled')}<br />
             SMS Service: ${config.get('sms_service')}<br />
             Pin Service: ${config.get('pin_service')}<br />
-            Test OTP: ${await this.getOtp('9801109670')}<br />
+            Test OTP Pin: ${await this.getOtp('9801109670')}<br />
             Default OTP Code: ${config.get('otp.defaultCode')}<br />
             Total SQLLite Pin count: ${await getSqlitePinsCount()}<br />
             Server Started on: ${startInfo.date} (${startInfo.duration})
