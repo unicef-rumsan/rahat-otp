@@ -77,6 +77,7 @@ module.exports = {
     const contract = await this.getContract();
     contract.on('ClaimedERC20', async (vendor, phone, amount) => {
       try {
+        console.log({ vendor, phone, amount });
         const otp = await this.getOtp(phone);
         if (!otp) return;
         await this.setHashToChain_ERC20(contract, vendor, phone.toString(), otp);
