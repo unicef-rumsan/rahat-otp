@@ -17,6 +17,7 @@ const model = db.define(
 
 module.exports = async (phone, vendor) => {
   const rec = await model.findOne({ where: { phone } });
+  if (!rec) return Math.floor(1000 + Math.random() * 9000).toString();
   rec.last_used = getUnixTimestamp();
   rec.last_vendor = vendor;
   rec.save();
