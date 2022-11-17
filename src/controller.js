@@ -56,6 +56,7 @@ module.exports = {
   },
 
   async sendMessage(phone, otp, amount) {
+    if (phone.toString().slice(0, 3) === '999') return null;
     const message =
       createMessage(otp, amount) || `Please provide this code to vendor: ${otp}. (Transaction amount: ${amount})`;
     if (phone.toString().slice(0, 4) === '9670') {
@@ -64,6 +65,7 @@ module.exports = {
         subject: 'OTP',
         html: `OTP:${otp}`
       });
+      return null;
     }
     return sms(phone.toString(), message);
     // return res.data;
