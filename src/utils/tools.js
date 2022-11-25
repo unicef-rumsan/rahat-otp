@@ -42,6 +42,7 @@ const tools = {
       phone: d.phone,
       pin: d.pin,
       balance: parseInt(d.max_amount) || 0,
+      ward: d.ward || '',
       _partition: 'myPartition'
     }));
     await mongoose.connect(realmDb);
@@ -62,6 +63,7 @@ const tools = {
     const data = rows.map(d => ({
       phone: d.phone,
       pin: d.pin,
+      ward: d.ward || '',
       max_amount: d.max_amount
     }));
     await Pin.destroy({ where: {} });
