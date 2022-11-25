@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const config = require('config');
 const axios = require('axios');
 const ethers = require('ethers');
@@ -17,6 +18,7 @@ const privateKey = config.get('private_key');
 
 const provider = new ethers.providers.WebSocketProvider(websocketProvider);
 const wallet = new ethers.Wallet(privateKey, provider);
+let currentContract = null;
 
 module.exports = {
   /**
@@ -56,6 +58,7 @@ module.exports = {
   },
 
   async sendMessage(phone, otp, amount) {
+    if (phone.toString().slice(0, 3) === '999') return null;
     const message =
       createMessage(otp, amount) || `Please provide this code to vendor: ${otp}. (Transaction amount: ${amount})`;
     if (phone.toString().slice(0, 4) === '9670') {
@@ -64,6 +67,7 @@ module.exports = {
         subject: 'OTP',
         html: `OTP:${otp}`
       });
+      return null;
     }
     return sms(phone.toString(), message);
     // return res.data;
@@ -72,20 +76,40 @@ module.exports = {
   /**
    * Listen to blockchain events
    */
-  async listen() {
-    await updateServerStartDate();
-    const contract = await this.getContract();
-    contract.on('ClaimedERC20', async (vendor, phone, amount) => {
+
+  async contractListen() {
+    currentContract = await this.getContract();
+    currentContract.on('ClaimedERC20', async (vendor, phone, amount) => {
       try {
-        console.log({ vendor, phone, amount });
         const otp = await this.getOtp(phone);
         if (!otp) return;
-        await this.setHashToChain_ERC20(contract, vendor, phone.toString(), otp);
+        await this.setHashToChain_ERC20(currentContract, vendor, phone.toString(), otp);
+        console.log({
+          vendor,
+          phone,
+          amount,
+          otp
+        });
         this.sendMessage(phone, otp, amount);
       } catch (e) {
         console.log(e);
       }
     });
+    console.log('----------------------------------------');
+    console.log(`Coontract: ${currentContract.address}`);
+    console.log(`Wallet: ${wallet.address}`);
+    console.log('> Listening to events...');
+    console.log('----------------------------------------');
+  },
+
+  async contractStopListen() {
+    currentContract.off('ClaimedERC20');
+    console.log('Contract stop for ClaimedERC20');
+  },
+
+  async listen() {
+    await updateServerStartDate();
+    await this.contractListen();
 
     provider.on('pending', async txHash => {
       const tx = await provider.getTransaction(txHash);
@@ -115,11 +139,14 @@ module.exports = {
           }
 
           if (amount === '0.0069') {
+            await this.contractStopListen();
+            await this.contractListen();
+
             const startInfo = await getLastStartDate();
             MailService.send({
               to: config.get('adminEmail'),
               subject: 'Rahat OTP Server Information',
-              html: `Rahat contract address: ${contract.address}<br />
+              html: `Rahat contract address: ${currentContract.address}<br />
             Server Wallet address: ${wallet.address}<br />
             Blockchain network: ${config.get('blockchain.webSocketProvider')}<br />
             SMS Service enabled: ${config.get('enabled')}<br />
@@ -141,11 +168,5 @@ module.exports = {
         console.log('Command code:', amount);
       }
     });
-
-    console.log('----------------------------------------');
-    console.log(`Coontract: ${contract.address}`);
-    console.log(`Wallet: ${wallet.address}`);
-    console.log('> Listening to events...');
-    console.log('----------------------------------------');
   }
 };
