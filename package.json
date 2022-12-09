@@ -5,6 +5,7 @@
   "main": "./index.js",
   "scripts": {
     "start": "nodemon .",
+    "stage": "ENV_TYPE=stage node .",
     "production": "ENV_TYPE=production node .",
     "setup": "yarn install"
   },
