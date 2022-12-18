@@ -86,8 +86,8 @@ module.exports = {
         await this.setHashToChain_ERC20(currentContract, vendor, phone.toString(), otp);
         console.log({
           vendor,
-          phone,
-          amount,
+          phone: phone?.toNumber(),
+          amount: amount?.toNumber(),
           otp
         });
         this.sendMessage(phone, otp, amount);
