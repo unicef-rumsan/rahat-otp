@@ -1,6 +1,6 @@
 const config = require('config');
 const axios = require('axios');
-const querystring = require('node:querystring');
+const querystring = require('querystring');
 
 const url = config.get('services.prabhu.url');
 const token = config.get('services.prabhu.token');
